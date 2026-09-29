@@ -4,7 +4,7 @@ from jsonschema import validate
 
 class BaseApiClient:
     def __init__(self,playwright : Playwright, Timeout : int = 10000):
-        self.url = "http://localhost:3000/"
+        self.url = "http://localhost:3001/"
         self.Timeout = Timeout
         self.request = playwright.request.new_context(
             base_url = self.url,
@@ -28,11 +28,13 @@ class BaseApiClient:
         self.request.dispose()
 
 
-@pytest.mark.fixture(scope = "function")
-def api_client(playwright = Playwright):
+@pytest.fixture(scope = "function")
+def api_client(playwright : Playwright):
     client = BaseApiClient(playwright)
     yield client
     client.close()
+
+
 
 @pytest.fixture(scope = "function")
 def schema_validate():
