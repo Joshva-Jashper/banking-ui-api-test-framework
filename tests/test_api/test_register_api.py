@@ -1,11 +1,16 @@
 from playwright.sync_api import expect
-from pages.pages_api.client_login import ClientUser
-from test_data.user_api import UserBody,UserName,FirstName,LastName,UserMissingField,UserBrokenBody
+from pages.pages_api.client_user import ClientUser
+from test_data.user_api import make_user_body,UserMissingField,UserBrokenBody
 import pytest
 
 @pytest.mark.api
 @pytest.mark.smoke
 def test_CreateUser(api_client):
+    UserBody = make_user_body()
+    FirstName = UserBody["firstName"]
+    LastName = UserBody["lastName"]
+    UserName = UserBody["username"]
+
     ApiClient = ClientUser(api_client)
     Response = ApiClient.CreateUser(UserBody)
     expect(Response).to_be_ok()
@@ -23,6 +28,11 @@ def test_CreateUser(api_client):
 @pytest.mark.api
 @pytest.mark.xfail(reason = "Its allowing Duplicate User ")
 def test_CreateDuplicateUser(api_client):
+    UserBody = make_user_body()
+    FirstName = UserBody["firstName"]
+    LastName = UserBody["lastName"]
+    UserName = UserBody["username"]
+
     ApiClient = ClientUser(api_client)
     Response = ApiClient.CreateUser(UserBody)
     expect(Response).to_be_ok()
@@ -54,8 +64,3 @@ def test_CreateUserWithInvalidBody(api_client):
     Response = ApiClient.CreateUser(UserBrokenBody)
     assert Response.status == 422
     assert Response.status_text == "Unprocessable Entity"
-
-
-
-    
-    

@@ -1,11 +1,17 @@
 from playwright.sync_api import expect
 from pages.pages_api.client_login import UserLogin
 from pages.pages_api.client_user import ClientUser
-from test_data.user_api import UserBody,UserName,FirstName,LastName,Password
+from test_data.user_api import make_user_body
 import pytest
 
 @pytest.mark.api
 def test_LoginWithValidCredentials(api_client):
+    UserBody = make_user_body()
+    FirstName = UserBody["firstName"]
+    LastName = UserBody["lastName"]
+    UserName = UserBody["username"]
+    Password = UserBody["password"]
+
     ApiClientLogin = UserLogin(api_client)
     ApiClientUser = ClientUser(api_client)
     Response = ApiClientUser.CreateUser(UserBody)
