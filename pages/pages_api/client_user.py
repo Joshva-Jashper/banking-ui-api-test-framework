@@ -11,4 +11,7 @@ class ClientUser:
     def GetCheckAuth(self):
         return self.apiClient.get(endpoint = "/checkAuth")
 
+    def GetUserBySearch(self,keyword):
+        return self.apiClient.get(endpoint = "/users/search",params={"q" : f'"{keyword}"'})
+
     

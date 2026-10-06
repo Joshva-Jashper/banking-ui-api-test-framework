@@ -2,27 +2,22 @@ from faker import Faker
 
 faker = Faker()
 
-FirstName = faker.first_name()
-LastName = faker.last_name()
-UserName = faker.user_name()
-Password = faker.password(length=12)
-
-UserBody = {
-    "firstName": FirstName,
-    "lastName": LastName,
-    "username": UserName,
-    "password": Password,
-}
+def make_user_body():
+    return {
+        "firstName": faker.first_name(),
+        "lastName": faker.last_name(),
+        "username": faker.user_name() + str(faker.random_int(min=1000, max=99999)),
+        "password": faker.password(length=12),
+    }
 
 UserMissingField = {
     "firstName": "jhon",
     "lastName": "dacy",
-    "username": "joshva" 
+    "username": "joshva"
 }
 
-UserBrokenBody = f"""{{
-    "firstName": "{FirstName}",
-    "lastName": "{LastName}",
-    "username": "{UserName}",
-    "password": "{Password}"
+UserBrokenBody = """{
+    "firstName": "broken",
+    "lastName": "broken",
+    "username": "broken"
 """

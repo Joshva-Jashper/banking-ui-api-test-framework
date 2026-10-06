@@ -2,12 +2,13 @@ import pytest
 from playwright.sync_api import expect
 from pages.pages_api.client_login import UserLogin
 from pages.pages_api.client_user import ClientUser
-from test_data.user_api import UserBody,UserName,FirstName,LastName,Password
+from test_data.user_api import make_user_body
 from faker import Faker
 
 @pytest.mark.api
 @pytest.mark.smoke
 def test_GetUserWithUserId(api_client):
+    UserBody = make_user_body()
     UserRegisterClient = ClientUser(api_client)
     UserLoginClient = UserLogin(api_client)
     RegisterResponse = UserRegisterClient.CreateUser(UserBody)
@@ -16,7 +17,7 @@ def test_GetUserWithUserId(api_client):
     assert RegisterResponse.status_text == "Created"
     RegisterResponseBody = RegisterResponse.json()
     UserId = RegisterResponseBody["user"]["id"]
-    LoginResponse = UserLoginClient.CreateLogin(UserName, Password)
+    LoginResponse = UserLoginClient.CreateLogin(UserBody["username"], UserBody["password"])
     expect(LoginResponse).to_be_ok()
     assert LoginResponse.status == 200
     assert LoginResponse.status_text == "OK"
@@ -51,6 +52,7 @@ def test_getUserWithInvalidUserId(api_client):
 @pytest.mark.api
 @pytest.mark.smoke
 def test_CheckAuthWithValidCookie(api_client):
+    UserBody = make_user_body()
     UserRegisterClient = ClientUser(api_client)
     UserLoginClient = UserLogin(api_client)
     RegisterResponse = UserRegisterClient.CreateUser(UserBody)
@@ -59,7 +61,7 @@ def test_CheckAuthWithValidCookie(api_client):
     assert RegisterResponse.status_text == "Created"
     RegisterResponseBody = RegisterResponse.json()
     UserId = RegisterResponseBody["user"]["id"]
-    LoginResponse = UserLoginClient.CreateLogin(UserName, Password)
+    LoginResponse = UserLoginClient.CreateLogin(UserBody["username"], UserBody["password"])
     expect(LoginResponse).to_be_ok()
     assert LoginResponse.status == 200
     assert LoginResponse.status_text == "OK"
@@ -82,6 +84,49 @@ def test_CheckAuthWithValidCookie(api_client):
 def test_CheckAuthWithInvalidCookie(api_client):
     UserApiClient = ClientUser(api_client)
     Response = UserApiClient.GetCheckAuth()
-    print(Response)
     assert Response.status == 401
     assert Response.status_text == "Unauthorized"
+
+
+@pytest.mark.api
+def test_SearchQueryWithValidKeyword(api_client):
+    UserBody = make_user_body()
+    UserRegister1 = ClientUser(api_client)
+    UserLogin1 = UserLogin(api_client)
+    UserRegister2 = ClientUser(api_client)
+    faker = Faker()
+    NewUser1Response = UserRegister1.CreateUser(UserBody)
+    UserLogin1.CreateLogin(UserBody["username"], UserBody["password"])
+    User2FirstName = faker.first_name()
+    user2username = faker.user_name()
+    user2Password = faker.password()
+    user2LastName = faker.last_name()
+    UserBody["firstName"] = User2FirstName
+    UserBody["username"] = user2username
+    UserBody["password"] = user2Password
+    UserBody["lastName"] = user2LastName
+    
+    NewUser2Response = UserRegister2.CreateUser(UserBody)
+    NewUser1SearchResponse = UserRegister1.GetUserBySearch(User2FirstName)
+    expect(NewUser1SearchResponse).to_be_ok()
+    assert NewUser1SearchResponse.status == 200
+    assert NewUser1SearchResponse.status_text == "OK"
+    NewUser1SearchResponseBody = NewUser1SearchResponse.json()
+    Results = NewUser1SearchResponseBody["results"]
+    assert any(Result["username"] == NewUser2Response.json()["user"]["username"] for Result in Results)
+
+@pytest.mark.api
+def test_SearchQueryWithInvalidKeyword(api_client):
+    UserBody = make_user_body()
+    UserRegister1 = ClientUser(api_client)
+    UserLogin1 = UserLogin(api_client)
+    UserRegister2 = ClientUser(api_client)
+    faker = Faker()
+    NewUser1Response = UserRegister1.CreateUser(UserBody)
+    UserLogin1.CreateLogin(UserBody["username"], UserBody["password"])
+    userName = faker.user_name()
+    User1SearchResponse = UserRegister1.GetUserBySearch(faker.user_name())
+    assert User1SearchResponse.status == 200
+    assert User1SearchResponse.status_text == "OK"
+    Results = User1SearchResponse.json()["results"]
+    assert (Result["username"] != userName for Result in Results)
