@@ -4,7 +4,7 @@ from jsonschema import validate
 
 class BaseApiClient:
     def __init__(self,playwright : Playwright, Timeout : int = 10000):
-        self.url = "http://localhost:3001/"
+        self.url = "http://localhost:3002/"
         self.Timeout = Timeout
         self.request = playwright.request.new_context(
             base_url = self.url,
@@ -20,6 +20,9 @@ class BaseApiClient:
 
     def put(self,endpoint : str, data = None, **kwargs):
         return self.request.put(endpoint, data = data, **kwargs)
+
+    def patch(self,endpoint : str, data = None, **kwargs):
+        return self.request.patch(endpoint, data = data , **kwargs)
 
     def delete(self,endpoint : str , **kwargs):
         return self.request.delete(endpoint, **kwargs)    

@@ -125,8 +125,62 @@ def test_SearchQueryWithInvalidKeyword(api_client):
     NewUser1Response = UserRegister1.CreateUser(UserBody)
     UserLogin1.CreateLogin(UserBody["username"], UserBody["password"])
     userName = faker.user_name()
-    User1SearchResponse = UserRegister1.GetUserBySearch(faker.user_name())
+    User1SearchResponse = UserRegister1.GetUserBySearch(userName)
     assert User1SearchResponse.status == 200
     assert User1SearchResponse.status_text == "OK"
     Results = User1SearchResponse.json()["results"]
     assert (Result["username"] != userName for Result in Results)
+
+@pytest.mark.api
+def test_SearchQueryWithSameUserKeyword(api_client):
+    UserBody = make_user_body()
+    UserRegister = ClientUser(api_client)
+    UserVerify = UserLogin(api_client)
+    UserRegister.CreateUser(UserBody)
+    UserVerify.CreateLogin(UserBody["username"], UserBody["password"])
+    UserSearchQueryResponse = UserRegister.GetUserBySearch(UserBody["username"])
+    expect(UserSearchQueryResponse).to_be_ok()
+    assert UserSearchQueryResponse.status == 200
+    assert UserSearchQueryResponse.status_text == "OK"
+    UserSearchQueryResponseBody = UserSearchQueryResponse.json()
+    Results = UserSearchQueryResponseBody["results"]
+    assert all(Result["username"] != UserBody["username"] for Result in Results)
+
+@pytest.mark.api
+def test_SearchQueryWithNoKeyWord(api_client):
+    UserBody = make_user_body()
+    UserRegister = ClientUser(api_client)
+    UserVerify = UserLogin(api_client)
+    UserRegister.CreateUser(UserBody)
+    UserVerify.CreateLogin(UserBody["username"], UserBody["password"])
+    UserSearchQueryResponse = UserRegister.GetUserbySearchWithNoKeyWord()
+    assert UserSearchQueryResponse.status == 422
+    assert UserSearchQueryResponse.status_text == "Unprocessable Entity"
+
+
+@pytest.mark.api
+def test_UpdateUserWithBody(api_client):
+    UserBody = make_user_body()
+    faker = Faker()
+    UserRegister = ClientUser(api_client)
+    UserVerify = UserLogin(api_client)
+    UserRegisterResponse = UserRegister.CreateUser(UserBody)
+    UserId = UserRegisterResponse.json()["user"]["id"]
+    UserVerify.CreateLogin(UserBody["username"], UserBody["password"])
+    NewFirstName = faker.first_name()
+    NewLastName = faker.last_name()
+    UserBody["firstName"] = NewFirstName
+    UserBody["lastName"] = NewLastName
+    UpdatedUserResponse = UserRegister.UpdateUser(UserBody,UserId)
+    expect(UpdatedUserResponse).to_be_ok()
+    assert UpdatedUserResponse.status == 204
+    assert UpdatedUserResponse.status_text == "No Content"
+    GetUpdatedUser = UserRegister.GetUser(UserId)
+    expect(GetUpdatedUser).to_be_ok()
+    assert GetUpdatedUser.status == 200
+    assert GetUpdatedUser.status_text == "OK"
+    GetUpdatedUserBody = GetUpdatedUser.json()["user"]
+    UserRegisterResponseBody = UserRegisterResponse.json()["user"]
+    assert UserRegisterResponseBody["id"] == GetUpdatedUserBody["id"]
+    assert NewFirstName == GetUpdatedUserBody["firstName"]
+    assert NewLastName == GetUpdatedUserBody["lastName"]

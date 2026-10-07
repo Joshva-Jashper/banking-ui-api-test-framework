@@ -14,4 +14,10 @@ class ClientUser:
     def GetUserBySearch(self,keyword):
         return self.apiClient.get(endpoint = "/users/search",params={"q" : f'"{keyword}"'})
 
+    def GetUserbySearchWithNoKeyWord(self): 
+        return self.apiClient.get(endpoint = "/users/search")
+
+    def UpdateUser(self,UserBody,UserId):
+        return self.apiClient.patch(endpoint = f"/users/{UserId}", data = UserBody)
+    
     
