@@ -184,3 +184,28 @@ def test_UpdateUserWithBody(api_client):
     assert UserRegisterResponseBody["id"] == GetUpdatedUserBody["id"]
     assert NewFirstName == GetUpdatedUserBody["firstName"]
     assert NewLastName == GetUpdatedUserBody["lastName"]
+
+@pytest.mark.api
+def test_PublicUserProfile(api_client):
+    UserRegister = ClientUser(api_client)
+    UserBody = make_user_body()
+    UserRegisterResponse = UserRegister.CreateUser(UserBody)
+    ProfileSearchResponse = UserRegister.GetPublicUserProfile(UserBody["username"])
+    expect(ProfileSearchResponse).to_be_ok()
+    assert ProfileSearchResponse.status == 200
+    assert ProfileSearchResponse.status_text == "OK"
+    ProfileSearchResponseBody = ProfileSearchResponse.json()
+    assert ProfileSearchResponseBody["user"]["firstName"] == UserRegisterResponse.json()["user"]["firstName"]
+    assert ProfileSearchResponseBody["user"]["lastName"] == UserRegisterResponse.json()["user"]["lastName"]    
+    
+
+@pytest.mark.api
+def test_PublicUserProfileWithInvalidUserName(api_client):
+    UserRegister = ClientUser(api_client)
+    faker = Faker()
+    ProfileSearchResponse = UserRegister.GetPublicUserProfile(faker.user_name())
+    assert ProfileSearchResponse.status == 200
+    assert ProfileSearchResponse.status_text == "OK"
+    assert len(ProfileSearchResponse.json()["user"]) == 0
+
+

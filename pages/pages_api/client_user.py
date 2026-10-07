@@ -20,4 +20,6 @@ class ClientUser:
     def UpdateUser(self,UserBody,UserId):
         return self.apiClient.patch(endpoint = f"/users/{UserId}", data = UserBody)
     
+    def GetPublicUserProfile(self,UserName):
+        return self.apiClient.get(endpoint = f"users/profile/{UserName}")
     
