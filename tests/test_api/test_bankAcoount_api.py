@@ -38,7 +38,7 @@ def test_AddBankAccountWithInvalidBody(api_client):
     UserLoginBody = UserLoginResponse.json()["user"]
     AddbankAccountResponse = UserBank.AddBankAccount(bankAccountInvalidBody)
     assert AddbankAccountResponse.status == 422
-    assert AddbankAccountResponse.status_text == "OK"
+    assert AddbankAccountResponse.status_text == "Unprocessable Entity"
 
 @pytest.mark.api
 def test_GetAllBankAccounts(api_client):
@@ -67,7 +67,7 @@ def test_GetAllBankAccounts(api_client):
     for account in GetAllAcountsBody:
         assert (account["userId"] == UserLoginBody["id"])
 
-
+@pytest.mark.api
 def test_GetBankAccountWithBankId(api_client):
     UserRegister = ClientUser(api_client)
     UserVerify = UserLogin(api_client)
@@ -99,3 +99,35 @@ def test_GetBankAccountWithBankId(api_client):
     assert AddbankAccountResponseBody["routingNumber"] == GetAccountBody["routingNumber"]
     assert AddbankAccountResponseBody["createdAt"] == GetAccountBody["createdAt"]
     assert AddbankAccountResponseBody["modifiedAt"] == GetAccountBody["modifiedAt"]
+
+@pytest.mark.api
+def test_DeleteBankAccount(api_client):
+    UserRegister = ClientUser(api_client)
+    UserVerify = UserLogin(api_client)
+    UserBank = BankAccount(api_client)
+    BankBody = makeBankAccount()
+    UserBody = make_user_body()
+    UserRegister.CreateUser(UserBody)
+    UserLoginResponse = UserVerify.CreateLogin(UserBody["username"],UserBody["password"])
+    UserLoginBody = UserLoginResponse.json()["user"]
+    AddbankAccountResponse = UserBank.AddBankAccount(BankBody)
+    expect(AddbankAccountResponse).to_be_ok()
+    assert AddbankAccountResponse.status == 200
+    assert AddbankAccountResponse.status_text == "OK"
+    AddbankAccountResponseBody = AddbankAccountResponse.json()["account"]
+    assert AddbankAccountResponseBody["userId"] == UserLoginBody["id"]
+    assert AddbankAccountResponseBody["bankName"] == BankBody["bankName"]
+    assert AddbankAccountResponseBody["routingNumber"] == BankBody["routingNumber"]
+    assert AddbankAccountResponseBody["accountNumber"] == BankBody["accountNumber"]
+    GetAccountBeforeDelete = UserBank.GetbankAccountWithId(AddbankAccountResponseBody["id"])
+    assert GetAccountBeforeDelete.json()["account"]["isDeleted"] == False
+    DeleteAccount = UserBank.DeleteBankAccountWithId(AddbankAccountResponseBody["id"])
+    expect(DeleteAccount).to_be_ok()
+    assert DeleteAccount.status == 200
+    assert DeleteAccount.status_text == "OK"
+    GetAccountAfterDelete = UserBank.GetbankAccountWithId(AddbankAccountResponseBody["id"])
+    assert GetAccountAfterDelete.json()["account"]["isDeleted"] == True
+
+    
+    
+    
