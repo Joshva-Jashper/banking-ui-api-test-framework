@@ -127,6 +127,7 @@ def test_DeleteBankAccount(api_client):
     assert DeleteAccount.status_text == "OK"
     GetAccountAfterDelete = UserBank.GetbankAccountWithId(AddbankAccountResponseBody["id"])
     assert GetAccountAfterDelete.json()["account"]["isDeleted"] == True
+    
 
     
     
