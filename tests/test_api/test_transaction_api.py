@@ -204,7 +204,6 @@ def test_TransactionByInvalidTransactionId(api_client):
     assert DoPaymentRequestBody["transaction"]["receiverId"] == UserRegister2Response.json()["user"]["id"]
     assert DoPaymentRequestBody["transaction"]["senderId"] == UserRegister1Response.json()["user"]["id"]
     AfterPaymentRequestAccept = UserTransaction1.GetOneTransaction("12343")
-    print(AfterPaymentRequestAccept)
     AfterPaymentRequestAccept.status == 422
     AfterPaymentRequestAccept.status_text == "Unprocessable Entity"
 
@@ -233,7 +232,7 @@ def test_TransactionFilterStatus(api_client):
     for result in Results:
         assert result["status"] == "pending"
 
-
+@pytest.mark.api
 def test_TransactionFilterRequestStatus(api_client):
     UserRegister1 = ClientUser(api_client)
     UserRegister2 = ClientUser(api_client)
@@ -267,4 +266,6 @@ def test_TransactionFilterRequestStatus(api_client):
     Results =  GetTransaction.json()["results"]
     for result in Results:
         assert result["requestStatus"] == "rejected"
+        
+
         
